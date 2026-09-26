@@ -66,8 +66,9 @@ export const SoporteIndexSchema = z.array(
   z.object({
     tipo: z.string(),
     archivo: z.string(),
-    vigencia_hasta: z.string(),
+    vigencia_hasta: z.string().nullable(),
     pais_emisor: z.string(),
+    descripcion: z.string().optional(),
   }),
 );
 

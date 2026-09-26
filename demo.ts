@@ -108,18 +108,22 @@ async function main(): Promise<void> {
         ...mapeo.requiere_confirmacion,
       ];
 
-      exigirOk<GenerarFormularioData>(
-        parseToolResponse<GenerarFormularioData>(
-          await generar_formulario.execute(
-            {
-              caso,
-              mapeo: todosLosCampos,
-            },
-            ctx,
-          ),
+      const resultadoFormulario = parseToolResponse<GenerarFormularioData>(
+        await generar_formulario.execute(
+          {
+            caso,
+            mapeo: todosLosCampos,
+          },
+          ctx,
         ),
-        "generar_formulario",
       );
+
+      if (!resultadoFormulario.ok) {
+        if (resultadoFormulario.error !== "formato no soportado") {
+          throw new Error(`generar_formulario: ${resultadoFormulario.error}`);
+        }
+        console.log(`  (formato no soportado — se generó valores-portal.md como alternativa)`);
+      }
 
       const paquete = exigirOk<ArmarPaqueteData>(
         parseToolResponse<ArmarPaqueteData>(

@@ -82,7 +82,7 @@ type PlantillaCampo = {
 type SoporteIndice = {
   tipo: string;
   archivo: string;
-  vigencia_hasta: string;
+  vigencia_hasta: string | null;
   pais_emisor: string;
 };
 
@@ -537,7 +537,7 @@ async function ejecutarLeerSolicitud(
         error: `plantilla corrupta en ${args.caso}`,
       } satisfies ToolResult<never>);
     }
-  } else if (solicitud.formato === "pdf") {
+    } else if (solicitud.formato === "pdf" || solicitud.formato === "portal") {
     try {
       const plantilla = await leerJson<unknown>(
         path.join(casoDir, "plantilla-campos.json"),
@@ -1100,7 +1100,7 @@ async function leerIndiceSoportes(
       !("pais_emisor" in entrada) ||
       typeof entrada.tipo !== "string" ||
       typeof entrada.archivo !== "string" ||
-      typeof entrada.vigencia_hasta !== "string" ||
+            (entrada.vigencia_hasta !== null && typeof entrada.vigencia_hasta !== "string") ||
       typeof entrada.pais_emisor !== "string"
     ) {
       throw new Error("repositorio/soportes/index.json inválido");
@@ -1123,7 +1123,20 @@ function estadoSoporte(
     return "ausente";
   }
 
+    if (entrada.vigencia_hasta === null) {
+    return "presente";
+  }
+
   const vigencia = new Date(entrada.vigencia_hasta);
+
+  if (
+    Number.isFinite(vigencia.getTime()) &&
+    vigencia.getTime() < ahora.getTime()
+  ) {
+    return "vencido";
+  }
+
+  return "presente";
 
   if (
     Number.isFinite(vigencia.getTime()) &&
