@@ -1,0 +1,881 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>Registro de proveedores</title>
+
+    <style>
+      :root {
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        color: #1f2937;
+        background: #f5f7fa;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #f5f7fa;
+      }
+
+      .app {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        max-width: 1000px;
+        margin: 0 auto;
+        background: #ffffff;
+      }
+
+      header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #e5e7eb;
+        background: #ffffff;
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 650;
+      }
+
+      header .status {
+        margin-top: 4px;
+        color: #6b7280;
+        font-size: 12px;
+      }
+
+      #healthStatus {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .health-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #9ca3af;
+      }
+
+      .health-dot.ok {
+        background: #22c55e;
+      }
+
+      .health-dot.error {
+        background: #ef4444;
+      }
+
+      #messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px 20px 100px;
+      }
+
+      .empty {
+        max-width: 560px;
+        margin: 80px auto;
+        text-align: center;
+        color: #6b7280;
+      }
+
+      .message {
+        display: flex;
+        margin-bottom: 18px;
+      }
+
+      .message.user {
+        justify-content: flex-end;
+      }
+
+      .message.assistant {
+        justify-content: flex-start;
+      }
+
+      .message-content {
+        max-width: min(760px, 88%);
+        padding: 12px 15px;
+        border-radius: 14px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
+      .message.user .message-content {
+        background: #1f2937;
+        color: #ffffff;
+        border-bottom-right-radius: 4px;
+      }
+
+      .message.assistant .message-content {
+        background: #f3f4f6;
+        color: #1f2937;
+        border-bottom-left-radius: 4px;
+      }
+
+      .message.assistant.confirmation .message-content {
+        border: 2px solid #d97706;
+        background: #fffbeb;
+      }
+
+      .confirmation-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 8px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: #fef3c7;
+        color: #92400e;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .thinking {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 20px 14px;
+        color: #6b7280;
+        font-size: 13px;
+      }
+
+      .thinking-dots {
+        display: inline-flex;
+        gap: 3px;
+      }
+
+      .thinking-dots span {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: #9ca3af;
+        animation: pulse 1.2s infinite ease-in-out;
+      }
+
+      .thinking-dots span:nth-child(2) {
+        animation-delay: 0.15s;
+      }
+
+      .thinking-dots span:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+
+      @keyframes pulse {
+        0%,
+        80%,
+        100% {
+          opacity: 0.3;
+        }
+
+        40% {
+          opacity: 1;
+        }
+      }
+
+      .tool-card {
+        max-width: min(760px, 88%);
+        margin: -8px 0 18px;
+        margin-left: 0;
+        border: 1px solid #dbe1e8;
+        border-radius: 10px;
+        background: #fafafa;
+        overflow: hidden;
+      }
+
+      .tool-card summary {
+        cursor: pointer;
+        padding: 10px 12px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+        user-select: none;
+      }
+
+      .tool-card summary:hover {
+        background: #f3f4f6;
+      }
+
+      .tool-body {
+        padding: 0 12px 12px;
+        border-top: 1px solid #e5e7eb;
+      }
+
+      .tool-section {
+        margin-top: 10px;
+      }
+
+      .tool-section-title {
+        margin-bottom: 5px;
+        color: #6b7280;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      pre {
+        margin: 0;
+        padding: 9px;
+        max-height: 220px;
+        overflow: auto;
+        border-radius: 6px;
+        background: #111827;
+        color: #e5e7eb;
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 11px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
+      .tool-result {
+        color: #374151;
+        font-size: 12px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
+      .composer {
+        position: sticky;
+        bottom: 0;
+        padding: 12px 20px 16px;
+        border-top: 1px solid #e5e7eb;
+        background: rgba(255, 255, 255, 0.96);
+      }
+
+      .composer-inner {
+        display: flex;
+        gap: 8px;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      textarea {
+        flex: 1;
+        min-height: 44px;
+        max-height: 140px;
+        resize: vertical;
+        padding: 11px 13px;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        outline: none;
+        font: inherit;
+        font-size: 14px;
+      }
+
+      textarea:focus {
+        border-color: #6b7280;
+        box-shadow: 0 0 0 2px rgba(107, 114, 128, 0.12);
+      }
+
+      button {
+        align-self: stretch;
+        min-width: 82px;
+        border: 0;
+        border-radius: 10px;
+        background: #1f2937;
+        color: white;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      button:hover:not(:disabled) {
+        background: #111827;
+      }
+
+      button:disabled,
+      textarea:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+
+      .error {
+        margin: 12px 20px;
+        padding: 10px 12px;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        background: #fef2f2;
+        color: #991b1b;
+        font-size: 13px;
+      }
+
+      @media (max-width: 640px) {
+        header {
+          padding: 14px 14px;
+        }
+
+        #messages {
+          padding: 18px 12px 100px;
+        }
+
+        .composer {
+          padding: 10px 12px 12px;
+        }
+
+        .message-content,
+        .tool-card {
+          max-width: 94%;
+        }
+
+        .composer-inner {
+          gap: 6px;
+        }
+
+        button {
+          min-width: 68px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <main class="app">
+      <header>
+        <h1>Registro de proveedores</h1>
+        <div class="status">
+          <span id="healthStatus">
+            <span class="health-dot"></span>
+            <span>Conectando...</span>
+          </span>
+        </div>
+      </header>
+
+      <section id="messages" aria-live="polite">
+        <div id="emptyState" class="empty">
+          Escribe una solicitud para comenzar el proceso de registro.
+        </div>
+      </section>
+
+      <div id="thinking" class="thinking" hidden>
+        <span>pensando…</span>
+        <span class="thinking-dots" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+      </div>
+
+      <div id="error" class="error" hidden></div>
+
+      <form id="composer" class="composer">
+        <div class="composer-inner">
+          <textarea
+            id="messageInput"
+            placeholder="Escribe tu solicitud..."
+            autocomplete="off"
+            rows="1"
+          ></textarea>
+
+          <button id="sendButton" type="submit">
+            Enviar
+          </button>
+        </div>
+      </form>
+    </main>
+
+    <script type="module">
+      // Se asume backend en http://localhost:3000 y frontend servido en otro puerto.
+      const API_BASE = "http://localhost:3000";
+
+      const sessionId = crypto.randomUUID();
+
+      const messagesElement =
+        document.getElementById("messages");
+      const emptyState =
+        document.getElementById("emptyState");
+      const composer =
+        document.getElementById("composer");
+      const messageInput =
+        document.getElementById("messageInput");
+      const sendButton =
+        document.getElementById("sendButton");
+      const thinkingElement =
+        document.getElementById("thinking");
+      const errorElement =
+        document.getElementById("error");
+      const healthStatus =
+        document.getElementById("healthStatus");
+
+      let esperandoRespuesta = false;
+      let requiresConfirmation = false;
+
+      function mostrarError(message) {
+        errorElement.textContent = message;
+        errorElement.hidden = false;
+      }
+
+      function limpiarError() {
+        errorElement.textContent = "";
+        errorElement.hidden = true;
+      }
+
+      function setThinking(value) {
+        esperandoRespuesta = value;
+        thinkingElement.hidden = !value;
+
+        actualizarEstadoInput();
+      }
+
+      function actualizarEstadoInput() {
+        /*
+         * Cuando se requiere confirmación, la única acción permitida
+         * es enviar una respuesta mediante el input.
+         */
+        messageInput.disabled = esperandoRespuesta;
+        sendButton.disabled = esperandoRespuesta;
+
+        if (esperandoRespuesta) {
+          messageInput.placeholder = "Procesando...";
+        } else if (requiresConfirmation) {
+          messageInput.placeholder =
+            "Escribe una confirmación explícita para continuar...";
+        } else {
+          messageInput.placeholder =
+            "Escribe tu solicitud...";
+        }
+      }
+
+      function scrollAlFinal() {
+        messagesElement.scrollTop =
+          messagesElement.scrollHeight;
+      }
+
+      function crearMensajeElemento(
+        role,
+        content,
+        needsConfirmation = false,
+      ) {
+        const wrapper =
+          document.createElement("div");
+
+        wrapper.className =
+          `message ${role}` +
+          (needsConfirmation
+            ? " confirmation"
+            : "");
+
+        const contentElement =
+          document.createElement("div");
+
+        contentElement.className =
+          "message-content";
+
+        if (
+          role === "assistant" &&
+          needsConfirmation
+        ) {
+          const label =
+            document.createElement("div");
+
+          label.className =
+            "confirmation-label";
+
+          label.textContent =
+            "⚠️ Requiere confirmación";
+
+          contentElement.appendChild(label);
+        }
+
+        const text =
+          document.createElement("div");
+
+        text.textContent = content ?? "";
+
+        contentElement.appendChild(text);
+        wrapper.appendChild(contentElement);
+
+        return wrapper;
+      }
+
+      function renderUserMessage(content) {
+        emptyState?.remove();
+
+        const element =
+          crearMensajeElemento(
+            "user",
+            content,
+          );
+
+        messagesElement.appendChild(element);
+        scrollAlFinal();
+      }
+
+      function renderAssistantMessage(
+        content,
+        needsConfirmation = false,
+      ) {
+        const element =
+          crearMensajeElemento(
+            "assistant",
+            content,
+            needsConfirmation,
+          );
+
+        messagesElement.appendChild(element);
+        scrollAlFinal();
+
+        return element;
+      }
+
+      function formatearArgs(args) {
+        try {
+          return JSON.stringify(
+            args,
+            null,
+            2,
+          );
+        } catch {
+          return String(args);
+        }
+      }
+
+      function truncarResultado(resultado) {
+        const texto =
+          typeof resultado === "string"
+            ? resultado
+            : String(resultado ?? "");
+
+        if (texto.length <= 150) {
+          return texto;
+        }
+
+        return `${texto.slice(0, 150)}…`;
+      }
+
+      function renderToolCalls(toolCalls) {
+        if (
+          !Array.isArray(toolCalls) ||
+          toolCalls.length === 0
+        ) {
+          return;
+        }
+
+        for (const toolCall of toolCalls) {
+          const card =
+            document.createElement("details");
+
+          card.className = "tool-card";
+
+          const summary =
+            document.createElement("summary");
+
+          summary.textContent =
+            `🔧 ${toolCall.name}`;
+
+          card.appendChild(summary);
+
+          const body =
+            document.createElement("div");
+
+          body.className = "tool-body";
+
+          const argsSection =
+            document.createElement("div");
+
+          argsSection.className =
+            "tool-section";
+
+          const argsTitle =
+            document.createElement("div");
+
+          argsTitle.className =
+            "tool-section-title";
+
+          argsTitle.textContent =
+            "Argumentos";
+
+          const argsPre =
+            document.createElement("pre");
+
+          argsPre.textContent =
+            formatearArgs(toolCall.args);
+
+          argsSection.appendChild(argsTitle);
+          argsSection.appendChild(argsPre);
+
+          const resultSection =
+            document.createElement("div");
+
+          resultSection.className =
+            "tool-section";
+
+          const resultTitle =
+            document.createElement("div");
+
+          resultTitle.className =
+            "tool-section-title";
+
+          resultTitle.textContent =
+            "Resultado";
+
+          const resultText =
+            document.createElement("div");
+
+          resultText.className =
+            "tool-result";
+
+          resultText.textContent =
+            truncarResultado(
+              toolCall.resultado_resumen,
+            );
+
+          resultSection.appendChild(
+            resultTitle,
+          );
+
+          resultSection.appendChild(
+            resultText,
+          );
+
+          body.appendChild(argsSection);
+          body.appendChild(resultSection);
+          card.appendChild(body);
+
+          messagesElement.appendChild(card);
+        }
+
+        scrollAlFinal();
+      }
+
+      function renderHistory(mensajes) {
+        if (!Array.isArray(mensajes)) {
+          return;
+        }
+
+        emptyState?.remove();
+
+        messagesElement.innerHTML = "";
+
+        for (const mensaje of mensajes) {
+          if (
+            mensaje.role === "user"
+          ) {
+            renderUserMessage(
+              mensaje.content ?? "",
+            );
+            continue;
+          }
+
+          if (
+            mensaje.role === "assistant"
+          ) {
+            renderAssistantMessage(
+              mensaje.content ?? "",
+              false,
+            );
+          }
+        }
+
+        scrollAlFinal();
+      }
+
+      async function verificarHealth() {
+        const dot =
+          healthStatus.querySelector(
+            ".health-dot",
+          );
+
+        const text =
+          healthStatus.querySelector(
+            "span:last-child",
+          );
+
+        try {
+          const response =
+            await fetch(
+              `${API_BASE}/api/health`,
+            );
+
+          if (!response.ok) {
+            throw new Error(
+              `HTTP ${response.status}`,
+            );
+          }
+
+          const data =
+            await response.json();
+
+          if (data.ok) {
+            dot.className =
+              "health-dot ok";
+
+            text.textContent =
+              `${data.provider} · ${data.model}`;
+          } else {
+            throw new Error(
+              "backend no disponible",
+            );
+          }
+        } catch {
+          dot.className =
+            "health-dot error";
+
+          text.textContent =
+            "Backend no disponible";
+        }
+      }
+
+      async function cargarHistorial() {
+        try {
+          const response =
+            await fetch(
+              `${API_BASE}/api/sessions/${encodeURIComponent(
+                sessionId,
+              )}`,
+            );
+
+          /*
+           * Una sesión recién creada todavía no existe en el backend.
+           * Es un caso normal y no requiere mostrar error.
+           */
+          if (response.status === 404) {
+            return;
+          }
+
+          if (!response.ok) {
+            throw new Error(
+              `No se pudo cargar el historial (HTTP ${response.status})`,
+            );
+          }
+
+          const data =
+            await response.json();
+
+          renderHistory(
+            data.mensajes,
+          );
+        } catch (error) {
+          mostrarError(
+            error instanceof Error
+              ? error.message
+              : "No se pudo cargar el historial.",
+          );
+        }
+      }
+
+      async function enviarMensaje(message) {
+        limpiarError();
+
+        renderUserMessage(message);
+
+        setThinking(true);
+
+        try {
+          const response =
+            await fetch(
+              `${API_BASE}/api/chat`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type":
+                    "application/json",
+                },
+                body: JSON.stringify({
+                  sessionId,
+                  message,
+                }),
+              },
+            );
+
+          let data;
+
+          try {
+            data = await response.json();
+          } catch {
+            throw new Error(
+              `El backend devolvió una respuesta inválida (HTTP ${response.status}).`,
+            );
+          }
+
+          if (!response.ok) {
+            throw new Error(
+              data.reply ||
+                data.error ||
+                `Error HTTP ${response.status}`,
+            );
+          }
+
+          const needs =
+            data.needsConfirmation === true;
+
+          /*
+           * Los toolCalls se renderizan inmediatamente debajo
+           * del mensaje de asistente correspondiente.
+           */
+          renderAssistantMessage(
+            data.reply ?? "",
+            needs,
+          );
+
+          renderToolCalls(
+            data.toolCalls,
+          );
+
+          requiresConfirmation = needs;
+        } catch (error) {
+          mostrarError(
+            error instanceof Error
+              ? error.message
+              : "No se pudo enviar el mensaje.",
+          );
+        } finally {
+          setThinking(false);
+          messageInput.focus();
+        }
+      }
+
+      composer.addEventListener(
+        "submit",
+        async (event) => {
+          event.preventDefault();
+
+          if (esperandoRespuesta) {
+            return;
+          }
+
+          const message =
+            messageInput.value.trim();
+
+          if (!message) {
+            return;
+          }
+
+          messageInput.value = "";
+
+          await enviarMensaje(message);
+        },
+      );
+
+      messageInput.addEventListener(
+        "keydown",
+        (event) => {
+          if (
+            event.key === "Enter" &&
+            !event.shiftKey
+          ) {
+            event.preventDefault();
+            composer.requestSubmit();
+          }
+        },
+      );
+
+      void verificarHealth();
+      void cargarHistorial();
+      actualizarEstadoInput();
+      messageInput.focus();
+    </script>
+  </body>
+</html>
