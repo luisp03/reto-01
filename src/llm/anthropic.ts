@@ -1,4 +1,5 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { z } from "zod";
 
 import type {
   LLMAdapter,
@@ -132,19 +133,9 @@ function convertirHerramientas(
  * Construye un objeto Zod para el mapa de argumentos de una herramienta.
  */
 function ObjectSchema(tool: ToolDef) {
-  // Import dinámico evitado deliberadamente: el adaptador necesita una
-  // conversión síncrona y z.object es parte del contrato Zod.
-  const { z } = requireZod();
   return z.object(tool.args);
 }
 
-/**
- * Carga Zod sin introducir tipos `any` en el contrato público.
- */
-function requireZod(): typeof import("zod") {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  return require("zod") as typeof import("zod");
-}
 
 function convertirMensajes(
   mensajes: Mensaje[],

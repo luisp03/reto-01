@@ -6,12 +6,12 @@ import { Hono } from "hono";
 import { z } from "zod";
 
 import {
-  proveedor_armar_paquete,
-  proveedor_generar_formulario,
-  proveedor_leer_solicitud,
-  proveedor_mapear_campos,
-  proveedor_simular_envio,
-} from "../src/tools/proveedor";
+  leer_solicitud,
+  mapear_campos,
+  generar_formulario,
+  armar_paquete,
+  simular_envio,
+} from "./tools/proveedor";
 
 import { AnthropicAdapter } from "./llm/anthropic";
 import type {
@@ -72,11 +72,11 @@ type SessionState = {
 const sesiones = new Map<string, SessionState>();
 
 const herramientas: ToolImplementation[] = [
-  proveedor_leer_solicitud,
-  proveedor_mapear_campos,
-  proveedor_generar_formulario,
-  proveedor_armar_paquete,
-  proveedor_simular_envio,
+  { ...leer_solicitud, name: "proveedor_leer_solicitud" },
+  { ...mapear_campos, name: "proveedor_mapear_campos" },
+  { ...generar_formulario, name: "proveedor_generar_formulario" },
+  { ...armar_paquete, name: "proveedor_armar_paquete" },
+  { ...simular_envio, name: "proveedor_simular_envio" },
 ] as ToolImplementation[];
 
 const herramientasPorNombre = new Map(
@@ -554,14 +554,13 @@ app.onError((error, c) => {
 
 export default app;
 
-// Permite ejecutar directamente con Bun sin requerir una clave para arrancar.
-// Las llamadas que necesiten Claude devolverán un error normalizado si falta la clave.
-if (
-  typeof Bun !== "undefined" &&
-  import.meta.main
-) {
-  Bun.serve({
-    port: Number(process.env.PORT ?? 3000),
-    fetch: app.fetch,
-  });
-}
+import { serve } from "@hono/node-server";
+
+const port = Number(process.env.PORT ?? 3000);
+
+serve({
+  fetch: app.fetch,
+  port,
+});
+
+console.log(`Servidor escuchando en http://localhost:${port}`);
