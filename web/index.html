@@ -387,8 +387,9 @@
     </main>
 
     <script type="module">
-      // Se asume backend en http://localhost:3000 y frontend servido en otro puerto.
-      const API_BASE = "http://localhost:3000";
+      // Ruta relativa: funciona igual en local, Codespaces y en producción,
+      // ya que backend y frontend se sirven desde el mismo origen (ver server.ts).
+      const API_BASE = "";
 
       const sessionId = crypto.randomUUID();
 

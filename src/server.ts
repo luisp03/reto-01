@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { serveStatic } from "@hono/node-server/serve-static";
 
 import { Hono } from "hono";
 import { z } from "zod";
@@ -463,6 +464,8 @@ const ChatRequestSchema = z.object({
 });
 
 const app = new Hono();
+
+app.use("/*", serveStatic({ root: "./web" }));
 
 app.post("/api/chat", async (c) => {
   let body: unknown;
