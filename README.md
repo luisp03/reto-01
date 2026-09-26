@@ -2,26 +2,33 @@
 
 ## Arranque
 
+Requiere Node.js 20+ (verificado con Node 24 en GitHub Codespaces).
+
 ```bash
-bun install && bun run dev
+npm install
+npm run dev
 ```
 
-El script `dev` debe levantar `src/server.ts` y servir `web/` concurrentemente.
+El servidor arranca en `http://localhost:3000`, sirviendo tanto la API (`/api/*`) como el frontend de chat en `web/index.html`.
 
 ## Variables de entorno
 
 Copiar `.env.example` a `.env` y completar:
 
 ```env
-ANTHROPIC_API_KEY=
+ANTHROPIC_API_KEY=tu_clave_aqui
 PORT=3000
 ```
 
-## Demo
+**Nota**: la API de Anthropic no ofrece capa gratuita permanente. Sin crédito cargado en la cuenta, el servidor arranca y responde correctamente en `/api/health`, pero `/api/chat` devolverá un error de saldo insuficiente al intentar generar una respuesta. Ver `SOLUCION.md`, sección "Estado de verificación end-to-end", para el detalle de qué se verificó sin necesidad de crédito.
+
+## Demo (sin necesidad de API key)
 
 ```bash
-bun run demo.ts
+npm run demo
 ```
+
+Procesa los 4 casos de `fixtures/reto-01/casos/` de forma determinista, sin consumir ningún modelo. Imprime un resumen por caso en consola.
 
 ## Estructura relevante
 
@@ -30,10 +37,4 @@ bun run demo.ts
 - `src/tools/schemas.ts` — esquemas.
 - `src/knowledge/registro-proveedor.md` — conocimiento de dominio.
 - `agent/prompt.md` — instrucciones del agente.
-- `src/llm/adapter.ts` / `src/llm/anthropic.ts` — frontera e implementación LLM.
-- `web/index.html` — frontend vanilla.
-- `out/<caso>/log.jsonl` — trazabilidad de herramientas.
-
-## Despliegue
-
-**Link de despliegue:** `<PLACEHOLDER_DEPLOYMENT_URL>`
+-
